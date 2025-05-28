@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:17.5
+    container_name: myhometech-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: myhometech
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - myhometech-network
+
+  # Aplicación NestJS
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: myhometech-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: myhometech
+      JWT_SECRET: your-super-secret-jwt-key
+      NODE_ENV: production
+    depends_on:
+      - postgres
+    networks:
+      - myhometech-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # pgAdmin (opcional, para administrar la BD)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: myhometech-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@myhometech.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - myhometech-network
+
+volumes:
+  postgres_data:
+
+networks:
+  myhometech-network:
+    driver: bridge

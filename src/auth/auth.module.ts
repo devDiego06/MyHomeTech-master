@@ -10,7 +10,7 @@ import { UserModule } from '../user/user.module';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: 'SECRET_KEY',
+      secret: process.env.JWT_SECRET || 'SECRET_KEY',
       signOptions: { expiresIn: '1d' },
     }),
     UserModule,
